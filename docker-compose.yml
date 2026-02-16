@@ -23,7 +23,7 @@ services:
 
   # Backend API
   backend:
-    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-genealogy/genealogia}-backend:${VERSION:-latest}
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-backend:${VERSION:-latest}
     container_name: genealogy-backend
     environment:
       DATABASE_URL: postgresql://genealogy:${POSTGRES_PASSWORD:-genealogy}@postgres:5432/genealogy_db
@@ -41,7 +41,7 @@ services:
 
   # Ingestion Service
   ingestion:
-    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-genealogy/genealogia}-ingestion-service:${VERSION:-latest}
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-ingestion-service:${VERSION:-latest}
     container_name: genealogy-ingestion
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -59,7 +59,7 @@ services:
 
   # Telegram Bot
   telegram-bot:
-    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-genealogy/genealogia}-telegram-bot:${VERSION:-latest}
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-telegram-bot:${VERSION:-latest}
     container_name: genealogy-telegram-bot
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
@@ -77,7 +77,7 @@ services:
 
   # React Frontend
   frontend:
-    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-genealogy/genealogia}-frontend:${VERSION:-latest}
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-frontend:${VERSION:-latest}
     container_name: genealogy-frontend
     ports:
       - "3000:3000"
