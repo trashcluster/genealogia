@@ -7,7 +7,7 @@ services:
     container_name: genealogy-postgres
     environment:
       POSTGRES_USER: genealogy
-      POSTGRES_PASSWORD: genealogy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-genealogy}
       POSTGRES_DB: genealogy_db
     ports:
       - "5432:5432"
@@ -19,81 +19,73 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # Backend API
   backend:
-    build:
-      context: ./packages/backend
-      dockerfile: Dockerfile
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-genealogy/genealogia}-backend:${VERSION:-latest}
     container_name: genealogy-backend
     environment:
-      DATABASE_URL: postgresql://genealogy:genealogy@postgres:5432/genealogy_db
-      SECRET_KEY: your-secret-key-change-in-production
+      DATABASE_URL: postgresql://genealogy:${POSTGRES_PASSWORD:-genealogy}@postgres:5432/genealogy_db
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       INGESTION_SERVICE_URL: http://ingestion:8001
-      DEBUG: "False"
+      DEBUG: ${DEBUG:-False}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./packages/backend:/app
+    restart: unless-stopped
 
   # Ingestion Service
   ingestion:
-    build:
-      context: ./packages/ingestion-service
-      dockerfile: Dockerfile
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-genealogy/genealogia}-ingestion-service:${VERSION:-latest}
     container_name: genealogy-ingestion
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_MODEL: gpt-4
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4}
       BACKEND_SERVICE_URL: http://backend:8000
-      BACKEND_API_KEY: sk_your-backend-api-key
-      DEBUG: "False"
+      BACKEND_API_KEY: ${BACKEND_API_KEY:-sk_your-backend-api-key}
+      DEBUG: ${DEBUG:-False}
     ports:
       - "8001:8001"
     depends_on:
       - backend
     volumes:
-      - ./packages/ingestion-service:/app
       - ./uploads:/app/uploads
+    restart: unless-stopped
 
   # Telegram Bot
   telegram-bot:
-    build:
-      context: ./packages/telegram-bot
-      dockerfile: Dockerfile
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-genealogy/genealogia}-telegram-bot:${VERSION:-latest}
     container_name: genealogy-telegram-bot
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_WEBHOOK_URL: https://your-domain.com/telegram/webhook
+      TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL:-https://your-domain.com/telegram/webhook}
       BACKEND_SERVICE_URL: http://backend:8000
-      BACKEND_API_KEY: sk_your-backend-api-key
+      BACKEND_API_KEY: ${BACKEND_API_KEY:-sk_your-backend-api-key}
       INGESTION_SERVICE_URL: http://ingestion:8001
-      DEBUG: "False"
+      DEBUG: ${DEBUG:-False}
     ports:
       - "8002:8002"
     depends_on:
       - backend
       - ingestion
-    volumes:
-      - ./packages/telegram-bot:/app
+    restart: unless-stopped
 
   # React Frontend
   frontend:
-    build:
-      context: ./packages/frontend
-      dockerfile: Dockerfile
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-genealogy/genealogia}-frontend:${VERSION:-latest}
     container_name: genealogy-frontend
     ports:
       - "3000:3000"
     depends_on:
       - backend
     environment:
-      REACT_APP_API_URL: http://localhost:8000
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8000}
+    restart: unless-stopped
 
 volumes:
   postgres_data:
