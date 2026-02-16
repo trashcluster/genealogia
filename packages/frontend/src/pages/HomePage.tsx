@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiUsers, FiUpload, FiBarChart3 } from 'react-icons/fi';
+import { FiUsers, FiUpload, FiTrendingUp } from 'react-icons/fi';
 
 export const HomePage: React.FC = () => {
   return (
@@ -35,7 +35,7 @@ export const HomePage: React.FC = () => {
 
           <div className="bg-white rounded-lg shadow-md p-8">
             <div className="flex items-center justify-center w-12 h-12 bg-indigo-600 rounded-md text-white mb-4">
-              <FiBarChart3 size={24} />
+              <FiTrendingUp size={24} />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">AI-Powered Intelligence</h3>
             <p className="text-gray-600">
