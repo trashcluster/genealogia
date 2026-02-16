@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with schema pre-integrated
+  postgres:
+    image: ghcr.io/trashcluster/genealogia-postgres:latest
+    container_name: genealogy-postgres
+    environment:
+      POSTGRES_USER: genealogy
+      POSTGRES_PASSWORD: genealogy123!
+      POSTGRES_DB: genealogy_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U genealogy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Backend API
+  backend:
+    image: ghcr.io/trashcluster/genealogia-backend:latest
+    container_name: genealogy-backend
+    environment:
+      DATABASE_URL: postgresql://genealogy:genealogy123!@postgres:5432/genealogy_db
+      SECRET_KEY: genealogy-secret-key-change-this-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      INGESTION_SERVICE_URL: http://ingestion:8001
+      DEBUG: "False"
+    ports:
+      - "8091:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Ingestion Service
+  ingestion:
+    image: ghcr.io/trashcluster/genealogia-ingestion-service:latest
+    container_name: genealogy-ingestion
+    environment:
+      OPENAI_API_KEY: sk-your-openai-key-here
+      OPENAI_MODEL: gpt-4
+      BACKEND_SERVICE_URL: http://backend:8000
+      BACKEND_API_KEY: sk_genealogy_backend_key_placeholder
+      DEBUG: "False"
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Telegram Bot
+  telegram-bot:
+    image: ghcr.io/trashcluster/genealogia-telegram-bot:latest
+    container_name: genealogy-telegram-bot
+    environment:
+      TELEGRAM_BOT_TOKEN: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+      TELEGRAM_WEBHOOK_URL: https://your-domain.com/telegram/webhook
+      BACKEND_SERVICE_URL: http://backend:8000
+      BACKEND_API_KEY: sk_genealogy_backend_key_placeholder
+      INGESTION_SERVICE_URL: http://ingestion:8001
+      DEBUG: "False"
+    depends_on:
+      - backend
+      - ingestion
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # React Frontend
+  frontend:
+    image: ghcr.io/trashcluster/genealogia-frontend:latest
+    container_name: genealogy-frontend
+    ports:
+      - "8090:3000"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://localhost:8091
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  genealogy-net:
+    driver: bridge
