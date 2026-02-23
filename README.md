@@ -47,7 +47,7 @@ A comprehensive family tree web application with AI-powered data ingestion, face
 - Node.js 18+ (for local development)
 - Python 3.9+ (for local development)
 
-### Quick Start
+### Quick Start with Docker Compose
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/trashcluster/genealogia.git
@@ -70,24 +70,116 @@ A comprehensive family tree web application with AI-powered data ingestion, face
    - Backend API: http://localhost:8000
    - API Documentation: http://localhost:8000/docs
 
+### 🐳 Portainer Deployment
+
+For production deployment using Portainer:
+
+1. **Prepare Environment Variables**:
+   ```bash
+   cp .env.portainer .env
+   # Edit .env with your actual values (see Environment Variables section)
+   ```
+
+2. **Deploy in Portainer**:
+   - Go to Portainer → Stacks → Add Stack
+   - Name the stack "genealogia"
+   - Copy the contents of `docker-compose.portainer.new.yml`
+   - Go to Environment variables tab
+   - Copy all variables from `.env.portainer` (remove comments)
+   - Update all REQUIRED variables with your actual values
+   - Deploy the stack
+
+3. **Access the application**:
+   - Frontend: http://localhost:8090
+   - Backend API: http://localhost:8091
+   - Knowledge Base: http://localhost:8003
+   - Face Recognition: http://localhost:8004
+
+4. **Optional Services**:
+   - To enable Nginx reverse proxy: Add `with-nginx` to profiles
+   - To enable local Ollama: Add `with-ollama` to profiles
+   - Example profiles: `with-nginx,with-ollama`
+
+**Portainer Services**:
+- **Frontend** (Port 8090): React web application
+- **Backend API** (Port 8091): Core genealogical data management
+- **Ingestion Service** (Port 8001): AI-powered data processing
+- **Knowledge Base** (Port 8003): Document storage and search
+- **Face Recognition** (Port 8004): Image analysis and clustering
+- **Telegram Bot** (Port 8002): Interactive chat interface
+- **PostgreSQL** (Internal): Database with pgvector
+- **Redis** (Internal): Caching and session management
+
 ### Environment Variables
-Required variables in `.env`:
+
+#### 🚨 REQUIRED VARIABLES - MUST BE PROVISIONED
+These variables contain sensitive data and must be set for the application to work:
+
 ```bash
-# Database
-POSTGRES_PASSWORD=your_secure_password
+# Database Credentials
+POSTGRES_USER=genealogy
+POSTGRES_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
+POSTGRES_DB=genealogy_db
 
-# AI Providers (at least one required)
-OPENAI_API_KEY=sk-your-openai-key
-CLAUDE_API_KEY=sk-ant-your-claude-key
-OLLAMA_URL=http://localhost:11434
+# Application Security
+SECRET_KEY=CHANGE_THIS_SUPER_SECRET_KEY_FOR_JWT_TOKENS
+BACKEND_API_KEY=sk_genealogy_backend_CHANGE_THIS_SECURE_KEY
 
-# Telegram Bot (optional)
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+# AI Provider Configuration (AT LEAST ONE REQUIRED)
+# OpenAI Configuration
+OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_MODEL=gpt-4
 
-# Application
-SECRET_KEY=your-secret-key
-BACKEND_API_KEY=sk-your-backend-api-key
+# Claude Configuration (Optional)
+CLAUDE_API_KEY=sk-ant-your-claude-api-key-here
+CLAUDE_MODEL=claude-3-sonnet-20240229
+
+# Ollama Configuration (Optional - for local AI models)
+OLLAMA_URL=http://ollama:11434
+OLLAMA_MODEL=llama2
+
+# Telegram Bot (Optional - only needed if using Telegram integration)
+TELEGRAM_BOT_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+TELEGRAM_WEBHOOK_URL=https://your-domain.com/telegram/webhook
 ```
+
+#### ⚙️ OPTIONAL VARIABLES - HAVE SECURE DEFAULTS
+These variables have reasonable defaults but can be modified for specific needs:
+
+```bash
+# AI Provider Preferences
+PREFERRED_AI_PROVIDER=openai
+ENABLE_FALLBACK_PROVIDERS=true
+
+# Face Recognition Settings
+FACE_RECOGNITION_MODEL=facenet
+FACE_SIMILARITY_THRESHOLD=0.6
+FACE_DETECTION_CONFIDENCE=0.8
+
+# Document Processing
+MAX_DOCUMENT_SIZE=50MB
+SUPPORTED_DOCUMENT_TYPES=pdf,jpg,jpeg,png,txt,html
+EMBEDDING_MODEL=text-embedding-ada-002
+
+# Conversation Engine Settings
+CONVERSATION_TIMEOUT_MINUTES=30
+MAX_CONVERSATION_TURNS=20
+ENABLE_INTERACTIVE_QUESTIONING=true
+
+# Frontend Configuration
+FRONTEND_API_URL=http://localhost:8091
+FRONTEND_WS_URL=ws://localhost:8091/ws
+```
+
+#### 🔒 SECURITY VARIABLES - SHOULD BE CHANGED FOR PRODUCTION
+These variables have placeholder values that should be changed for security:
+
+- `POSTGRES_PASSWORD`: Database password (currently: `CHANGE_THIS_SECURE_PASSWORD`)
+- `SECRET_KEY`: JWT signing key (currently: `CHANGE_THIS_SUPER_SECRET_KEY_FOR_JWT_TOKENS`)
+- `BACKEND_API_KEY`: Backend API authentication (currently: `sk_genealogy_backend_CHANGE_THIS_SECURE_KEY`)
+- `OPENAI_API_KEY`: OpenAI API key (currently: `sk-your-openai-api-key-here`)
+- `CLAUDE_API_KEY`: Claude API key (currently: `sk-ant-your-claude-api-key-here`)
+- `TELEGRAM_BOT_TOKEN`: Telegram bot token (currently: `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11`)
 
 ## 📱 Usage
 

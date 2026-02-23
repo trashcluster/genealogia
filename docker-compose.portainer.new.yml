@@ -1,0 +1,276 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: genealogy-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: genealogy_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: genealogy-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Backend API
+  backend:
+    image: ghcr.io/trashcluster/genealogia-backend:latest
+    container_name: genealogy-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/genealogy_db
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REDIS_URL: redis://redis:6379
+      INGESTION_SERVICE_URL: http://ingestion:8001
+      KNOWLEDGE_SERVICE_URL: http://knowledge-base:8003
+      FACE_RECOGNITION_SERVICE_URL: http://face-recognition:8004
+      DEBUG: "False"
+    ports:
+      - "8091:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Enhanced Ingestion Service with Multi-AI Support
+  ingestion:
+    image: ghcr.io/trashcluster/genealogia-ingestion-service:latest
+    container_name: genealogy-ingestion
+    environment:
+      # AI Provider Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+      CLAUDE_MODEL: ${CLAUDE_MODEL}
+      OLLAMA_URL: ${OLLAMA_URL}
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+      
+      # Service Configuration
+      BACKEND_SERVICE_URL: http://backend:8000
+      BACKEND_API_KEY: ${BACKEND_API_KEY}
+      REDIS_URL: redis://redis:6379
+      
+      # AI Provider Preferences
+      PREFERRED_AI_PROVIDER: ${PREFERRED_AI_PROVIDER}
+      ENABLE_FALLBACK_PROVIDERS: ${ENABLE_FALLBACK_PROVIDERS}
+      
+      DEBUG: "False"
+    volumes:
+      - uploads_data:/app/uploads
+      - voice_data:/app/voice
+      - temp_data:/app/temp
+    depends_on:
+      - backend
+      - redis
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Knowledge Base Service
+  knowledge-base:
+    image: ghcr.io/trashcluster/genealogia-knowledge-base:latest
+    container_name: genealogy-knowledge-base
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/genealogy_db
+      REDIS_URL: redis://redis:6379
+      BACKEND_SERVICE_URL: http://backend:8000
+      BACKEND_API_KEY: ${BACKEND_API_KEY}
+      
+      # Document Processing
+      DOCUMENT_STORAGE_PATH: /app/documents
+      MAX_DOCUMENT_SIZE: ${MAX_DOCUMENT_SIZE}
+      SUPPORTED_DOCUMENT_TYPES: ${SUPPORTED_DOCUMENT_TYPES}
+      
+      # AI Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL}
+      
+      DEBUG: "False"
+    volumes:
+      - documents_data:/app/documents
+      - knowledge_temp:/app/temp
+    depends_on:
+      - backend
+      - redis
+      - postgres
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Face Recognition Service
+  face-recognition:
+    image: ghcr.io/trashcluster/genealogia-face-recognition:latest
+    container_name: genealogy-face-recognition
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/genealogy_db
+      REDIS_URL: redis://redis:6379
+      BACKEND_SERVICE_URL: http://backend:8000
+      BACKEND_API_KEY: ${BACKEND_API_KEY}
+      
+      # Face Recognition Configuration
+      FACE_RECOGNITION_MODEL: ${FACE_RECOGNITION_MODEL}
+      FACE_SIMILARITY_THRESHOLD: ${FACE_SIMILARITY_THRESHOLD}
+      FACE_DETECTION_CONFIDENCE: ${FACE_DETECTION_CONFIDENCE}
+      
+      # Storage
+      FACES_STORAGE_PATH: /app/faces
+      THUMBNAILS_PATH: /app/thumbnails
+      
+      DEBUG: "False"
+    volumes:
+      - faces_data:/app/faces
+      - thumbnails_data:/app/thumbnails
+      - face_temp:/app/temp
+    depends_on:
+      - backend
+      - redis
+      - postgres
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Enhanced Telegram Bot with Conversation Engine
+  telegram-bot:
+    image: ghcr.io/trashcluster/genealogia-telegram-bot:latest
+    container_name: genealogy-telegram-bot
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL}
+      BACKEND_SERVICE_URL: http://backend:8000
+      BACKEND_API_KEY: ${BACKEND_API_KEY}
+      INGESTION_SERVICE_URL: http://ingestion:8001
+      KNOWLEDGE_SERVICE_URL: http://knowledge-base:8003
+      FACE_RECOGNITION_SERVICE_URL: http://face-recognition:8004
+      REDIS_URL: redis://redis:6379
+      
+      # Conversation Engine Settings
+      CONVERSATION_TIMEOUT_MINUTES: ${CONVERSATION_TIMEOUT_MINUTES}
+      MAX_CONVERSATION_TURNS: ${MAX_CONVERSATION_TURNS}
+      ENABLE_INTERACTIVE_QUESTIONING: ${ENABLE_INTERACTIVE_QUESTIONING}
+      
+      DEBUG: "False"
+    volumes:
+      - telegram_data:/app/data
+      - telegram_downloads:/app/downloads
+    depends_on:
+      - backend
+      - ingestion
+      - knowledge-base
+      - face-recognition
+      - redis
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # React Frontend
+  frontend:
+    image: ghcr.io/trashcluster/genealogia-frontend:latest
+    container_name: genealogy-frontend
+    ports:
+      - "8090:3000"
+    environment:
+      REACT_APP_API_URL: ${FRONTEND_API_URL}
+      REACT_APP_WS_URL: ${FRONTEND_WS_URL}
+      REACT_APP_ENVIRONMENT: production
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+
+  # Optional: Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: genealogy-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+    profiles:
+      - with-nginx
+
+  # Optional: Ollama for Local AI Models
+  ollama:
+    image: ollama/ollama:latest
+    container_name: genealogy-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+    restart: unless-stopped
+    networks:
+      - genealogy-net
+    profiles:
+      - with-ollama
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads_data:
+    driver: local
+  voice_data:
+    driver: local
+  temp_data:
+    driver: local
+  documents_data:
+    driver: local
+  knowledge_temp:
+    driver: local
+  faces_data:
+    driver: local
+  thumbnails_data:
+    driver: local
+  face_temp:
+    driver: local
+  telegram_data:
+    driver: local
+  telegram_downloads:
+    driver: local
+  ollama_data:
+    driver: local
+
+networks:
+  genealogy-net:
+    driver: bridge
