@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database with pgvector
   postgres:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: genealogy-postgres
     environment:
       POSTGRES_USER: genealogy
@@ -21,6 +21,21 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: genealogy-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # Backend API
   backend:
     image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-backend:${VERSION:-latest}
@@ -31,33 +46,106 @@ services:
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       INGESTION_SERVICE_URL: http://ingestion:8001
+      KNOWLEDGE_SERVICE_URL: http://knowledge:8003
+      FACE_RECOGNITION_URL: http://face-recognition:8004
+      REDIS_URL: redis://redis:6379
       DEBUG: ${DEBUG:-False}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
-  # Ingestion Service
+  # Enhanced Ingestion Service with multi-AI support
   ingestion:
     image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-ingestion-service:${VERSION:-latest}
     container_name: genealogy-ingestion
     environment:
+      # OpenAI
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4}
+      
+      # Claude (Anthropic)
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-3-sonnet-20240229}
+      
+      # Ollama (Local)
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama2}
+      
+      # Service URLs
       BACKEND_SERVICE_URL: http://backend:8000
       BACKEND_API_KEY: ${BACKEND_API_KEY:-sk_your-backend-api-key}
+      KNOWLEDGE_SERVICE_URL: http://knowledge:8003
+      FACE_RECOGNITION_URL: http://face-recognition:8004
+      REDIS_URL: redis://redis:6379
+      
+      # AI Provider Settings
+      PREFERRED_AI_PROVIDER: ${PREFERRED_AI_PROVIDER:-openai}
+      ENABLE_FALLBACK_PROVIDERS: ${ENABLE_FALLBACK_PROVIDERS:-true}
+      
+      # Face Recognition
+      FACE_RECOGNITION_ENABLED: ${FACE_RECOGNITION_ENABLED:-true}
+      FACE_RECOGNITION_MODEL: ${FACE_RECOGNITION_MODEL:-facenet}
+      FACE_SIMILARITY_THRESHOLD: ${FACE_SIMILARITY_THRESHOLD:-0.6}
+      
       DEBUG: ${DEBUG:-False}
     ports:
       - "8001:8001"
     depends_on:
       - backend
+      - redis
     volumes:
+      - ./uploads:/app/uploads
+      - ./faces:/app/faces
+    restart: unless-stopped
+
+  # Knowledge Base Service
+  knowledge:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-knowledge-base:${VERSION:-latest}
+    container_name: genealogy-knowledge
+    environment:
+      DATABASE_URL: postgresql://genealogy:${POSTGRES_PASSWORD:-genealogy}@postgres:5432/genealogy_db
+      BACKEND_SERVICE_URL: http://backend:8000
+      BACKEND_API_KEY: ${BACKEND_API_KEY:-sk_your-backend-api-key}
+      REDIS_URL: redis://redis:6379
+      DEBUG: ${DEBUG:-False}
+    ports:
+      - "8003:8003"
+    depends_on:
+      - backend
+      - postgres
+    volumes:
+      - ./documents:/app/documents
       - ./uploads:/app/uploads
     restart: unless-stopped
 
-  # Telegram Bot
+  # Face Recognition Service
+  face-recognition:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-face-recognition:${VERSION:-latest}
+    container_name: genealogy-face-recognition
+    environment:
+      DATABASE_URL: postgresql://genealogy:${POSTGRES_PASSWORD:-genealogy}@postgres:5432/genealogy_db
+      BACKEND_SERVICE_URL: http://backend:8000
+      BACKEND_API_KEY: ${BACKEND_API_KEY:-sk_your-backend-api-key}
+      FACE_RECOGNITION_ENABLED: ${FACE_RECOGNITION_ENABLED:-true}
+      FACE_RECOGNITION_MODEL: ${FACE_RECOGNITION_MODEL:-facenet}
+      FACE_SIMILARITY_THRESHOLD: ${FACE_SIMILARITY_THRESHOLD:-0.6}
+      DEBUG: ${DEBUG:-False}
+    ports:
+      - "8004:8004"
+    depends_on:
+      - backend
+      - postgres
+    volumes:
+      - ./faces:/app/faces
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+  # Enhanced Telegram Bot with conversation engine
   telegram-bot:
     image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-telegram-bot:${VERSION:-latest}
     container_name: genealogy-telegram-bot
@@ -67,15 +155,22 @@ services:
       BACKEND_SERVICE_URL: http://backend:8000
       BACKEND_API_KEY: ${BACKEND_API_KEY:-sk_your-backend-api-key}
       INGESTION_SERVICE_URL: http://ingestion:8001
+      KNOWLEDGE_SERVICE_URL: http://knowledge:8003
+      FACE_RECOGNITION_URL: http://face-recognition:8004
+      REDIS_URL: redis://redis:6379
       DEBUG: ${DEBUG:-False}
     ports:
       - "8002:8002"
     depends_on:
       - backend
       - ingestion
+      - knowledge
+      - face-recognition
+    volumes:
+      - ./uploads:/app/uploads
     restart: unless-stopped
 
-  # React Frontend
+  # React Frontend with modern UI
   frontend:
     image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-trashcluster/genealogia}-frontend:${VERSION:-latest}
     container_name: genealogy-frontend
@@ -85,8 +180,44 @@ services:
       - backend
     environment:
       REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8000}
+      REACT_APP_WS_URL: ${REACT_APP_WS_URL:-ws://localhost:8000}
     restart: unless-stopped
+
+  # Optional: Ollama for local AI models
+  ollama:
+    image: ollama/ollama:latest
+    container_name: genealogy-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    profiles:
+      - local-ai
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: genealogy-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    profiles:
+      - production
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
     driver: local

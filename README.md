@@ -1,52 +1,233 @@
-# Genealogy App - AI-Powered Family Tree Management
+# Genealogia - Enhanced Genealogy Web Application
 
-A comprehensive genealogy data management system with AI-powered ingestion through multiple input methods.
+A comprehensive family tree web application with AI-powered data ingestion, face recognition, and knowledge base capabilities.
 
-## 🎯 Features
+## 🚀 Features
 
-- **AI-Powered Data Extraction**: Use GPT-4 to understand and extract genealogical information from any text, voice, images, or PDFs
-- **Multiple Input Methods**:
-  - 💬 Text messages
-  - 🎤 Voice messages (Telegram)
-  - 📷 Images and PDFs (OCR)
-  - 👥 vCard/CardDAV contacts
-  - 🤖 Telegram bot integration
-- **GEDCOM-Based Database**: Follows genealogical standards with proper schema for individuals, families, events, sources, and notes
-- **API Key Authentication**: Secure API access for programmatic integration
-- **Family Tree Visualization**: Browse and manage family relationships
+### Core Functionality
+- **Multi-AI Backend Support**: OpenAI GPT-4, Anthropic Claude, and local Ollama models
+- **Interactive Telegram Bot**: Voice, text, document, and photo ingestion with conversational AI
+- **Face Recognition**: Automatic face detection, clustering, and person identification
+- **Knowledge Base**: Document storage with semantic search and event extraction
+- **Family Tree Visualization**: Interactive genealogical relationships and timeline views
+- **Modern UI**: Responsive React frontend with Tailwind CSS and Heroicons
+
+### Data Ingestion Methods
+- **Text Input**: Direct text entry with AI processing
+- **Voice Messages**: Audio-to-text conversion and analysis
+- **Document Upload**: PDF, images, text files with OCR and content extraction
+- **Photo Analysis**: Face detection and person identification
+- **Telegram Integration**: Complete bot interface for mobile data entry
+
+### AI-Powered Features
+- **Smart Data Extraction**: Automatic person, relationship, and event identification
+- **Interactive Questioning**: AI asks clarifying questions to improve data quality
+- **Multi-Provider Support**: Fallback between AI providers for reliability
+- **Event Correlation**: Cross-reference events across documents and media
 
 ## 🏗️ Architecture
 
+### Microservices Design
+- **Backend API** (Port 8000): Core genealogical data management
+- **Ingestion Service** (Port 8001): AI-powered data processing
+- **Telegram Bot** (Port 8002): Interactive chat interface
+- **Knowledge Base** (Port 8003): Document storage and search
+- **Face Recognition** (Port 8004): Image analysis and clustering
+- **Frontend** (Port 3000): React web application
+
+### Database
+- **PostgreSQL** with pgvector extension for vector similarity
+- **GEDCOM-based schema** with extensions for AI features
+- **Vector embeddings** for semantic search and face recognition
+
+## 🛠️ Installation
+
+### Prerequisites
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+- Python 3.9+ (for local development)
+
+### Quick Start
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/trashcluster/genealogia.git
+   cd genealogia
+   ```
+
+2. **Configure environment variables**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API keys and preferences
+   ```
+
+3. **Start all services**:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+### Environment Variables
+Required variables in `.env`:
+```bash
+# Database
+POSTGRES_PASSWORD=your_secure_password
+
+# AI Providers (at least one required)
+OPENAI_API_KEY=sk-your-openai-key
+CLAUDE_API_KEY=sk-ant-your-claude-key
+OLLAMA_URL=http://localhost:11434
+
+# Telegram Bot (optional)
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+
+# Application
+SECRET_KEY=your-secret-key
+BACKEND_API_KEY=sk-your-backend-api-key
+```
+
+## 📱 Usage
+
+### Web Interface
+1. **Dashboard**: Overview of statistics and recent activity
+2. **Individuals**: Add, edit, and manage family members
+3. **Family Tree**: Visual representation of relationships
+4. **Timeline**: Chronological view of family events
+5. **Knowledge Base**: Upload and search documents
+6. **Face Recognition**: Manage photo collections and face clusters
+7. **Ingestion**: Process text, voice, and document data
+8. **Settings**: Configure AI providers and preferences
+
+### Telegram Bot
+Commands:
+- `/start` - Begin interactive session
+- `/help` - Show available commands
+- `/status` - Check conversation status
+- `/reset` - Clear conversation history
+
+Features:
+- **Text Messages**: Natural language data entry
+- **Voice Messages**: Audio processing with transcription
+- **Photos**: Face detection and person tagging
+- **Documents**: File upload and content extraction
+- **Interactive Q&A**: AI asks clarifying questions
+
+## 🔧 Development
+
+### Local Development Setup
+1. **Backend Services**:
+   ```bash
+   cd packages/backend
+   pip install -r requirements.txt
+   uvicorn src.main:app --reload --port 8000
+   ```
+
+2. **Frontend**:
+   ```bash
+   cd packages/frontend
+   npm install
+   npm start
+   ```
+
+3. **Telegram Bot**:
+   ```bash
+   cd packages/telegram-bot
+   pip install -r requirements.txt
+   python src/main.py
+   ```
+
+### Project Structure
 ```
 genealogia/
 ├── packages/
-│   ├── backend/              # FastAPI backend service
-│   ├── ingestion-service/    # AI-powered data processing
-│   ├── telegram-bot/         # Telegram bot interface
-│   └── frontend/             # React web interface
-├── database/                 # PostgreSQL schema
-└── docker-compose.yml        # Container orchestration
+│   ├── backend/           # Core API service
+│   ├── ingestion-service/ # AI data processing
+│   ├── telegram-bot/      # Chat interface
+│   ├── knowledge-base/    # Document management
+│   ├── face-recognition/  # Image analysis
+│   └── frontend/         # React web app
+├── database/
+│   └── schema.sql        # Database schema
+├── docker-compose.yml      # Service orchestration
+└── .env.example         # Environment template
 ```
 
-### Services
+## 🔒 Security
 
-1. **Backend (Port 8000)** - FastAPI REST API
-   - User authentication (JWT + API keys)
-   - CRUD operations for genealogical data
-   - PostgreSQL database integration
+### Data Protection
+- **API Key Encryption**: Secure storage of provider credentials
+- **JWT Authentication**: Token-based API access
+- **Input Validation**: Comprehensive data sanitization
+- **Privacy Controls**: User-controlled data sharing options
 
-2. **Ingestion Service (Port 8001)** - AI Processing
-   - Text processing with GPT-4
-   - Voice transcription (Whisper API)
-   - OCR for images and PDFs
-   - vCard/CardDAV parsing
-   - Structured data extraction
+### Best Practices
+- Use strong, unique passwords
+- Regularly rotate API keys
+- Enable HTTPS in production
+- Review privacy settings
 
-3. **Telegram Bot (Port 8002)** - Chat Interface
-   - Voice message processing
-   - Image/PDF upload
-   - Contact card sharing
-   - Real-time feedback
+## 📊 Monitoring
+
+### Health Checks
+All services include health endpoints:
+- `/health` - Service status
+- `/metrics` - Performance metrics
+- `/docs` - API documentation
+
+### Logging
+- Structured JSON logging
+- Error tracking and alerting
+- Performance monitoring
+- Audit trails for data changes
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+### Development Guidelines
+- Follow PEP 8 for Python code
+- Use TypeScript for React components
+- Write comprehensive tests
+- Update documentation
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue on GitHub
+- Check the documentation
+- Review the FAQ section
+
+## 🗺️ Roadmap
+
+### Upcoming Features
+- [ ] Mobile application (React Native)
+- [ ] Advanced family tree visualizations
+- [ ] GEDCOM import/export improvements
+- [ ] Collaborative family trees
+- [ ] DNA integration
+- [ ] Multi-language support
+
+### Technical Improvements
+- [ ] Enhanced AI model fine-tuning
+- [ ] Real-time collaboration
+- [ ] Advanced search capabilities
+- [ ] Performance optimizations
+- [ ] Extended file format support
+
+---
+
+**Genealogia** - Building family connections through intelligent technology.
 
 4. **Frontend (Port 3000)** - React Dashboard
    - Family tree visualization
