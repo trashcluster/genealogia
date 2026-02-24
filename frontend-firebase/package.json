@@ -1,0 +1,66 @@
+{
+  "name": "genealogia-firebase",
+  "version": "1.0.0",
+  "description": "Firebase configuration for Genealogia Genealogy App",
+  "scripts": {
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "start": "react-scripts start",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "serve": "npm run build && firebase serve --only hosting"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.0",
+    "react-scripts": "5.0.1",
+    "firebase": "^10.0.0",
+    "@firebase/firestore": "^4.0.0",
+    "@firebase/auth": "^1.0.0",
+    "@firebase/storage": "^0.12.0",
+    "@firebase/functions": "^0.11.0",
+    "axios": "^1.6.0",
+    "react-query": "^3.39.0",
+    "react-hot-toast": "^2.4.0",
+    "@headlessui/react": "^1.7.0",
+    "@heroicons/react": "^2.0.0",
+    "tailwindcss": "^3.3.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "date-fns": "^3.0.0",
+    "clsx": "^2.0.0",
+    "framer-motion": "^10.0.0",
+    "react-dropzone": "^14.2.0",
+    "react-select": "^5.7.0",
+    "react-datepicker": "^4.21.0",
+    "recharts": "^2.8.0",
+    "d3": "^7.8.0",
+    "react-flow-renderer": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "private": true
+}

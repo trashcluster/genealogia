@@ -1,185 +1,84 @@
-# Genealogia - Enhanced Genealogy Web Application
+# Genealogia - AI-Powered Family Tree Management
 
-A comprehensive family tree web application with AI-powered data ingestion, face recognition, and knowledge base capabilities.
+A comprehensive family tree web application with AI-powered data ingestion, face recognition, and knowledge base capabilities built on Firebase.
 
 ## 🚀 Features
 
 ### Core Functionality
-- **Multi-AI Backend Support**: OpenAI GPT-4, Anthropic Claude, and local Ollama models
-- **Interactive Telegram Bot**: Voice, text, document, and photo ingestion with conversational AI
+- **Firebase Gemini AI Integration**: Advanced AI processing with Google's Gemini models
+- **Interactive Web Interface**: Modern React frontend with real-time updates
 - **Face Recognition**: Automatic face detection, clustering, and person identification
 - **Knowledge Base**: Document storage with semantic search and event extraction
 - **Family Tree Visualization**: Interactive genealogical relationships and timeline views
-- **Modern UI**: Responsive React frontend with Tailwind CSS and Heroicons
+- **Modern UI**: Responsive design with Tailwind CSS and Heroicons
 
 ### Data Ingestion Methods
 - **Text Input**: Direct text entry with AI processing
 - **Voice Messages**: Audio-to-text conversion and analysis
 - **Document Upload**: PDF, images, text files with OCR and content extraction
 - **Photo Analysis**: Face detection and person identification
-- **Telegram Integration**: Complete bot interface for mobile data entry
 
 ### AI-Powered Features
 - **Smart Data Extraction**: Automatic person, relationship, and event identification
 - **Interactive Questioning**: AI asks clarifying questions to improve data quality
-- **Multi-Provider Support**: Fallback between AI providers for reliability
+- **Multi-Modal Processing**: Text, voice, and document analysis
 - **Event Correlation**: Cross-reference events across documents and media
 
 ## 🏗️ Architecture
 
-### Microservices Design
-- **Backend API** (Port 8000): Core genealogical data management
-- **Ingestion Service** (Port 8001): AI-powered data processing
-- **Telegram Bot** (Port 8002): Interactive chat interface
-- **Knowledge Base** (Port 8003): Document storage and search
-- **Face Recognition** (Port 8004): Image analysis and clustering
-- **Frontend** (Port 3000): React web application
+### Firebase Serverless Design
+- **Firebase Hosting**: React web application (Port 3000)
+- **Cloud Functions**: Serverless backend for AI processing and API endpoints
+- **Cloud Firestore**: NoSQL database for genealogical data
+- **Firebase Storage**: File storage for documents, photos, and media
+- **Firebase Authentication**: User management and security
 
-### Database
-- **PostgreSQL** with pgvector extension for vector similarity
-- **GEDCOM-based schema** with extensions for AI features
-- **Vector embeddings** for semantic search and face recognition
+### Database Structure
+- **Firestore Collections**: User-isolated data with proper indexing
+- **Document Schema**: Optimized for genealogical relationships
+- **Security Rules**: User-based data isolation and access control
 
 ## 🛠️ Installation
 
 ### Prerequisites
-- Docker and Docker Compose
+- Firebase account (create at https://firebase.google.com)
 - Node.js 18+ (for local development)
-- Python 3.9+ (for local development)
+- Firebase CLI (`npm install -g firebase-tools`)
 
-### Quick Start with Docker Compose
+### Quick Start
+
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/trashcluster/genealogia.git
    cd genealogia
    ```
 
-2. **Configure environment variables**:
+2. **Initialize Firebase**:
+   ```bash
+   firebase login
+   firebase init
+   ```
+
+3. **Configure environment variables**:
    ```bash
    cp .env.example .env
-   # Edit .env with your API keys and preferences
+   # Edit .env with your Firebase configuration
    ```
 
-3. **Start all services**:
+4. **Install dependencies**:
    ```bash
-   docker-compose up -d
+   cd functions && npm install
+   cd ../frontend-firebase && npm install
    ```
 
-4. **Access the application**:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
-   - API Documentation: http://localhost:8000/docs
-
-### 🐳 Portainer Deployment
-
-For production deployment using Portainer:
-
-1. **Prepare Environment Variables**:
+5. **Deploy to Firebase**:
    ```bash
-   cp .env.portainer .env
-   # Edit .env with your actual values (see Environment Variables section)
+   firebase deploy
    ```
 
-2. **Deploy in Portainer**:
-   - Go to Portainer → Stacks → Add Stack
-   - Name the stack "genealogia"
-   - Copy the contents of `docker-compose.portainer.new.yml`
-   - Go to Environment variables tab
-   - Copy all variables from `.env.portainer` (remove comments)
-   - Update all REQUIRED variables with your actual values
-   - Deploy the stack
-
-3. **Access the application**:
-   - Frontend: http://localhost:8090
-   - Backend API: http://localhost:8091
-   - Knowledge Base: http://localhost:8003
-   - Face Recognition: http://localhost:8004
-
-4. **Optional Services**:
-   - To enable Nginx reverse proxy: Add `with-nginx` to profiles
-   - To enable local Ollama: Add `with-ollama` to profiles
-   - Example profiles: `with-nginx,with-ollama`
-
-**Portainer Services**:
-- **Frontend** (Port 8090): React web application
-- **Backend API** (Port 8091): Core genealogical data management
-- **Ingestion Service** (Port 8001): AI-powered data processing
-- **Knowledge Base** (Port 8003): Document storage and search
-- **Face Recognition** (Port 8004): Image analysis and clustering
-- **Telegram Bot** (Port 8002): Interactive chat interface
-- **PostgreSQL** (Internal): Database with pgvector
-- **Redis** (Internal): Caching and session management
-
-### Environment Variables
-
-#### 🚨 REQUIRED VARIABLES - MUST BE PROVISIONED
-These variables contain sensitive data and must be set for the application to work:
-
-```bash
-# Database Credentials
-POSTGRES_USER=genealogy
-POSTGRES_PASSWORD=CHANGE_THIS_SECURE_PASSWORD
-POSTGRES_DB=genealogy_db
-
-# Application Security
-SECRET_KEY=CHANGE_THIS_SUPER_SECRET_KEY_FOR_JWT_TOKENS
-BACKEND_API_KEY=sk_genealogy_backend_CHANGE_THIS_SECURE_KEY
-
-# AI Provider Configuration (AT LEAST ONE REQUIRED)
-# OpenAI Configuration
-OPENAI_API_KEY=sk-your-openai-api-key-here
-OPENAI_MODEL=gpt-4
-
-# Claude Configuration (Optional)
-CLAUDE_API_KEY=sk-ant-your-claude-api-key-here
-CLAUDE_MODEL=claude-3-sonnet-20240229
-
-# Ollama Configuration (Optional - for local AI models)
-OLLAMA_URL=http://ollama:11434
-OLLAMA_MODEL=llama2
-
-# Telegram Bot (Optional - only needed if using Telegram integration)
-TELEGRAM_BOT_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
-TELEGRAM_WEBHOOK_URL=https://your-domain.com/telegram/webhook
-```
-
-#### ⚙️ OPTIONAL VARIABLES - HAVE SECURE DEFAULTS
-These variables have reasonable defaults but can be modified for specific needs:
-
-```bash
-# AI Provider Preferences
-PREFERRED_AI_PROVIDER=openai
-ENABLE_FALLBACK_PROVIDERS=true
-
-# Face Recognition Settings
-FACE_RECOGNITION_MODEL=facenet
-FACE_SIMILARITY_THRESHOLD=0.6
-FACE_DETECTION_CONFIDENCE=0.8
-
-# Document Processing
-MAX_DOCUMENT_SIZE=50MB
-SUPPORTED_DOCUMENT_TYPES=pdf,jpg,jpeg,png,txt,html
-EMBEDDING_MODEL=text-embedding-ada-002
-
-# Conversation Engine Settings
-CONVERSATION_TIMEOUT_MINUTES=30
-MAX_CONVERSATION_TURNS=20
-ENABLE_INTERACTIVE_QUESTIONING=true
-
-# Frontend Configuration
-FRONTEND_API_URL=http://localhost:8091
-FRONTEND_WS_URL=ws://localhost:8091/ws
-```
-
-#### 🔒 SECURITY VARIABLES - SHOULD BE CHANGED FOR PRODUCTION
-These variables have placeholder values that should be changed for security:
-
-- `POSTGRES_PASSWORD`: Database password (currently: `CHANGE_THIS_SECURE_PASSWORD`)
-- `SECRET_KEY`: JWT signing key (currently: `CHANGE_THIS_SUPER_SECRET_KEY_FOR_JWT_TOKENS`)
-- `BACKEND_API_KEY`: Backend API authentication (currently: `sk_genealogy_backend_CHANGE_THIS_SECURE_KEY`)
-- `OPENAI_API_KEY`: OpenAI API key (currently: `sk-your-openai-api-key-here`)
-- `CLAUDE_API_KEY`: Claude API key (currently: `sk-ant-your-claude-api-key-here`)
-- `TELEGRAM_BOT_TOKEN`: Telegram bot token (currently: `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11`)
+6. **Access the application**:
+   - Frontend: https://your-project.firebaseapp.com
+   - Functions: https://your-region-your-project.cloudfunctions.net
 
 ## 📱 Usage
 
@@ -191,89 +90,85 @@ These variables have placeholder values that should be changed for security:
 5. **Knowledge Base**: Upload and search documents
 6. **Face Recognition**: Manage photo collections and face clusters
 7. **Ingestion**: Process text, voice, and document data
-8. **Settings**: Configure AI providers and preferences
+8. **Settings**: Configure AI preferences and user profile
 
-### Telegram Bot
-Commands:
-- `/start` - Begin interactive session
-- `/help` - Show available commands
-- `/status` - Check conversation status
-- `/reset` - Clear conversation history
-
-Features:
-- **Text Messages**: Natural language data entry
-- **Voice Messages**: Audio processing with transcription
-- **Photos**: Face detection and person tagging
-- **Documents**: File upload and content extraction
-- **Interactive Q&A**: AI asks clarifying questions
+### Features
+- **Natural Language Processing**: Enter family information in natural language
+- **Voice Input**: Record voice messages for data entry
+- **Document Processing**: Upload PDFs and images for automatic extraction
+- **Photo Tagging**: Automatic face detection and person identification
+- **Interactive Q&A**: AI-guided data collection process
 
 ## 🔧 Development
 
 ### Local Development Setup
-1. **Backend Services**:
+
+1. **Start Firebase Emulators**:
    ```bash
-   cd packages/backend
-   pip install -r requirements.txt
-   uvicorn src.main:app --reload --port 8000
+   firebase emulators:start
    ```
 
-2. **Frontend**:
+2. **Run Frontend Locally**:
    ```bash
-   cd packages/frontend
-   npm install
+   cd frontend-firebase
    npm start
    ```
 
-3. **Telegram Bot**:
+3. **Test Functions**:
    ```bash
-   cd packages/telegram-bot
-   pip install -r requirements.txt
-   python src/main.py
+   cd functions
+   npm run shell
    ```
 
 ### Project Structure
 ```
 genealogia/
-├── packages/
-│   ├── backend/           # Core API service
-│   ├── ingestion-service/ # AI data processing
-│   ├── telegram-bot/      # Chat interface
-│   ├── knowledge-base/    # Document management
-│   ├── face-recognition/  # Image analysis
-│   └── frontend/         # React web app
-├── database/
-│   └── schema.sql        # Database schema
-├── docker-compose.yml      # Service orchestration
-└── .env.example         # Environment template
+├── functions/                 # Cloud Functions
+│   ├── src/
+│   │   ├── index.ts          # Main functions
+│   │   ├── auth.ts           # Authentication
+│   │   ├── individuals.ts    # Individual management
+│   │   ├── ingestion.ts      # AI processing
+│   │   └── ...
+│   └── package.json
+├── frontend-firebase/         # React frontend
+│   ├── src/
+│   │   ├── firebase.ts       # Firebase config
+│   │   ├── components/       # React components
+│   │   └── pages/           # Page components
+│   └── package.json
+├── firebase.json             # Firebase configuration
+├── firestore.rules           # Database security rules
+├── storage.rules             # File security rules
+└── README.md                 # This file
 ```
 
 ## 🔒 Security
 
 ### Data Protection
-- **API Key Encryption**: Secure storage of provider credentials
-- **JWT Authentication**: Token-based API access
+- **Firebase Authentication**: Secure user authentication
+- **Firestore Security Rules**: User data isolation
+- **Storage Security Rules**: File access control
 - **Input Validation**: Comprehensive data sanitization
-- **Privacy Controls**: User-controlled data sharing options
 
 ### Best Practices
-- Use strong, unique passwords
-- Regularly rotate API keys
-- Enable HTTPS in production
-- Review privacy settings
+- Use strong passwords
+- Enable two-factor authentication
+- Regularly review security rules
+- Monitor Firebase console for suspicious activity
 
 ## 📊 Monitoring
 
-### Health Checks
-All services include health endpoints:
-- `/health` - Service status
-- `/metrics` - Performance metrics
-- `/docs` - API documentation
+### Firebase Console
+- **Functions**: Monitor execution and performance
+- **Firestore**: Database usage and queries
+- **Storage**: File storage and bandwidth
+- **Authentication**: User activity and security
 
 ### Logging
-- Structured JSON logging
-- Error tracking and alerting
-- Performance monitoring
-- Audit trails for data changes
+- **Function Logs**: Detailed execution logs
+- **Error Tracking**: Automatic error reporting
+- **Performance Metrics**: Response times and usage
 
 ## 🤝 Contributing
 
@@ -284,8 +179,8 @@ All services include health endpoints:
 5. Submit a pull request
 
 ### Development Guidelines
-- Follow PEP 8 for Python code
-- Use TypeScript for React components
+- Use TypeScript for type safety
+- Follow Firebase security best practices
 - Write comprehensive tests
 - Update documentation
 
@@ -297,8 +192,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For support and questions:
 - Create an issue on GitHub
-- Check the documentation
-- Review the FAQ section
+- Check the Firebase documentation
+- Review the troubleshooting section
 
 ## 🗺️ Roadmap
 
@@ -320,260 +215,3 @@ For support and questions:
 ---
 
 **Genealogia** - Building family connections through intelligent technology.
-
-4. **Frontend (Port 3000)** - React Dashboard
-   - Family tree visualization
-   - Data management interface
-   - User authentication
-   - Search and filtering
-
-## 📋 Prerequisites
-
-- Docker & Docker Compose
-- OpenAI API key (for GPT-4)
-- Telegram Bot token (optional, for Telegram integration)
-- PostgreSQL (automatic via Docker)
-
-## 🚀 Quick Start
-
-### 1. Set up environment variables
-
-```bash
-cp .env.example .env
-# Edit .env and add your API keys:
-# - OPENAI_API_KEY
-# - TELEGRAM_BOT_TOKEN (optional)
-```
-
-### 2. Start all services
-
-```bash
-docker-compose up -d
-```
-
-This starts:
-- PostgreSQL (port 5432)
-- Backend API (port 8000)
-- Ingestion Service (port 8001)
-- Telegram Bot (port 8002)
-- Frontend (port 3000)
-
-### 3. Access the application
-
-- **Frontend**: http://localhost:3000
-- **Backend API Docs**: http://localhost:8000/docs
-- **Ingestion Service Docs**: http://localhost:8001/docs
-
-## 📚 API Usage
-
-### Register a new user
-
-```bash
-curl -X POST http://localhost:8000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john",
-    "email": "john@example.com",
-    "password": "secure_password"
-  }'
-```
-
-Response includes `api_key` for future requests.
-
-### Login
-
-```bash
-curl -X POST http://localhost:8000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john",
-    "password": "secure_password"
-  }'
-```
-
-### Create an individual
-
-```bash
-curl -X POST http://localhost:8000/api/individuals \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "gedcom_id": "I1",
-    "given_names": "John",
-    "surname": "Smith",
-    "sex": "M",
-    "birth_date": "1920-01-15",
-    "birth_place": "London, England"
-  }'
-```
-
-### Ingest text data
-
-```bash
-curl -X POST http://localhost:8001/api/ingest/text \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "My grandfather John Smith was born in 1920 in London. He married Mary Johnson in 1945.",
-    "content_type": "text",
-    "source_type": "telegram",
-    "source_id": "telegram_123"
-  }'
-```
-
-## 🤖 Using the Telegram Bot
-
-1. Get your bot token from [@BotFather](https://t.me/BotFather)
-2. Add `TELEGRAM_BOT_TOKEN` to `.env`
-3. Configure webhook with your domain
-4. Users can:
-   - Send text descriptions of family members
-   - Share voice recordings
-   - Upload family documents/photos
-   - Share contact cards
-
-## 📊 Database Schema
-
-The GEDCOM-based schema includes:
-
-- **individuals** - Person records
-- **family_groups** - Marriage/partnership records
-- **children** - Parent-child relationships
-- **events** - Births, deaths, marriages, etc.
-- **sources** - Citation sources
-- **media** - Family photos and documents
-- **notes** - Genealogical notes
-
-## 🔐 Authentication
-
-Two authentication methods:
-
-1. **API Key** (for service-to-service)
-   - Generated automatically on registration
-   - Pass as Bearer token: `Authorization: Bearer sk_...`
-
-2. **JWT Token** (for UI)
-   - Generated on login
-   - 30-minute expiration (configurable)
-
-## 🛠️ Development
-
-### Backend
-
-```bash
-cd packages/backend
-pip install -r requirements.txt
-python -m uvicorn src.main:app --reload
-```
-
-### Ingestion Service
-
-```bash
-cd packages/ingestion-service
-pip install -r requirements.txt
-python -m uvicorn src.main:app --reload
-```
-
-### Telegram Bot
-
-```bash
-cd packages/telegram-bot
-pip install -r requirements.txt
-python -m uvicorn src.main:app --reload
-```
-
-### Frontend
-
-```bash
-cd packages/frontend
-npm install
-npm start
-```
-
-## 🔄 Ingestion Pipeline
-
-```
-User Input (Text/Voice/Image/PDF/vCard)
-         ↓
-   File Upload
-         ↓
-   Text Extraction (Transcription/OCR)
-         ↓
-   AI Processing (GPT-4)
-         ↓
-   Entity Extraction (INDIVIDUAL/FAMILY/EVENT)
-         ↓
-   Data Validation
-         ↓
-   Database Storage
-```
-
-## 📝 GEDCOM Data Structure
-
-```
-Individual
-├── Personal Info (name, sex, dates, places)
-├── Events (birth, death, marriage, etc.)
-├── Family Relationships
-├── Media (photos, documents)
-├── Sources (citations)
-└── Notes
-```
-
-## 🗄️ Database Queries
-
-Example: Find all individuals with surname "Smith"
-
-```sql
-SELECT * FROM individuals 
-WHERE user_id = '{user_id}' 
-AND surname ILIKE '%Smith%';
-```
-
-## 🚨 Troubleshooting
-
-### Service won't start
-- Check `.env` file has all required keys
-- Verify port availability (8000, 8001, 8002, 3000, 5432)
-- View logs: `docker-compose logs service_name`
-
-### Database connection error
-- Ensure PostgreSQL is healthy: `docker-compose ps`
-- Reset database: `docker-compose down -v` then `docker-compose up`
-
-### API returns 401 Unauthorized
-- Check your API key is correct
-- Ensure Bearer token format: `Authorization: Bearer sk_...`
-
-## 📖 Documentation
-
-- [FastAPI Docs](http://localhost:8000/docs)
-- [GEDCOM Standard](https://en.wikipedia.org/wiki/GEDCOM)
-- [OpenAI API](https://platform.openai.com/docs)
-- [Telegram Bot API](https://core.telegram.org/bots/api)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to the branch
-5. Open a pull request
-
-## 📄 License
-
-MIT License
-
-## 🎓 Next Steps
-
-- [ ] Add family tree visualization
-- [ ] Implement GEDCOM file import/export
-- [ ] Add photo gallery with OCR
-- [ ] Create timeline view
-- [ ] Add relationship suggestions
-- [ ] Implement data privacy controls
-- [ ] Add multi-language support
-- [ ] Create mobile app
-
-## 📧 Support
-
-For issues and questions, please create an issue on the repository.

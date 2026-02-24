@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Individuals collection - users can only access their own individuals
+    match /users/{userId}/individuals/{individualId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Family groups collection - users can only access their own families
+    match /users/{userId}/families/{familyId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Events collection - users can only access their own events
+    match /users/{userId}/events/{eventId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Media collection - users can only access their own media
+    match /users/{userId}/media/{mediaId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Knowledge base documents - users can only access their own documents
+    match /users/{userId}/knowledge/{documentId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Face recognition data - users can only access their own face data
+    match /users/{userId}/faces/{faceId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Ingestion logs - users can only access their own logs
+    match /users/{userId}/ingestion/{logId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Conversation sessions - users can only access their own conversations
+    match /users/{userId}/conversations/{conversationId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Public read access for some aggregated data (optional)
+    match /users/{userId}/stats/{statId} {
+      allow read: if isOwner(userId);
+    }
+  }
+}

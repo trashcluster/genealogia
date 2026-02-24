@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the file
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // User-specific folders
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Profile pictures
+    match /profiles/{userId}/{fileName} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Document uploads for knowledge base
+    match /documents/{userId}/{documentId}/{fileName} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Face recognition images
+    match /faces/{userId}/{faceId}/{fileName} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Media files (photos, videos, audio)
+    match /media/{userId}/{mediaId}/{fileName} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Temporary upload files
+    match /temp/{userId}/{fileName} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
